@@ -65,7 +65,7 @@ void ServFun(SOCKET servSock)
     cout << "聊天室服务器已开启" << endl;
     // 该线程负责处理服务端和各个客户端发生的事件
     // 将传入的参数初始化
-    string usrs[MAX_LINK_NUM] = {0};
+    string usrs[MAX_LINK_NUM];
     while (1) // 不停执行
     {
         for (int i = 0; i < total + 1; ++i) // i代表现在正在监听事件的终端
@@ -115,7 +115,7 @@ void ServFun(SOCKET servSock)
                                 {
                                     usrs[nextIndex] = string(usr_name_char);
                                     // 给新用户传送所有在聊天室的用户的用户名，方便初始化
-                                    string all_user_name = "";
+                                    string all_user_name;
                                     for (int i = 1; i <= total; ++i) // 包括自己
                                     {
                                         all_user_name.append(usrs[i].c_str()).append("+"); // 用户名使用+分割
@@ -134,7 +134,7 @@ void ServFun(SOCKET servSock)
                                             用户进入msg格式： (s->c)
                                             char(23) + user_name
                                         */
-                                        string msg = "";
+                                        string msg;
                                         msg.append(1, char(23)).append(usrs[nextIndex].c_str());
                                         for (int i = 1; i < total; ++i) // 不包括自己
                                         {

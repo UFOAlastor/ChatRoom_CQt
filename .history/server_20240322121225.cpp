@@ -65,7 +65,7 @@ void ServFun(SOCKET servSock)
     cout << "聊天室服务器已开启" << endl;
     // 该线程负责处理服务端和各个客户端发生的事件
     // 将传入的参数初始化
-    string usrs[MAX_LINK_NUM] = {0};
+    string usrs[MAX_LINK_NUM];
     while (1) // 不停执行
     {
         for (int i = 0; i < total + 1; ++i) // i代表现在正在监听事件的终端

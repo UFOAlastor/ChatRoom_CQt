@@ -8,21 +8,18 @@ using namespace std;
 #pragma comment(lib, "ws2_32.lib") // socket库
 
 //==============================全局变量区===================================
-// int RECV_TIMEOUT = 10;               // 接收消息超时
-// int SEND_TIMEOUT = 10;               // 发送消息超时
 const int BUFFER_SIZE = 1024 * 10;   // 缓冲区大小
+int RECV_TIMEOUT = 10;               // 接收消息超时
+int SEND_TIMEOUT = 10;               // 发送消息超时
 const int WAIT_TIME = 10;            // 每个客户端等待事件的时间，单位毫秒
 const int MAX_LINK_NUM = 10;         // 服务端最大链接数
 SOCKET cliSock[MAX_LINK_NUM]{};      // 客户端套接字 0号为服务端
 SOCKADDR_IN cliAddr[MAX_LINK_NUM]{}; // 客户端地址
 WSAEVENT cliEvent[MAX_LINK_NUM]{};   // 客户端事件 0号为服务端,它用于让程序的一部分等待来自另一部分的信号。例如，当数据从套接字变为可用时，winsock 库会将事件设置为信号状态
 int total = 0;                       // 当前已经链接的客服端服务数
-const char spl = 20;                 // 用户私聊消息分隔符
-const char spl2 = 21;                // 群聊消息分隔符
-const char spl3 = 22;                // 用户退出
-const char spl4 = 23;                // 新用户加入
 
 //==============================函数声明===================================
+
 void ServFun(SOCKET servSock); // 服务器端函数声明 while(1) 不退出
 
 int main()
@@ -65,10 +62,10 @@ void ServFun(SOCKET servSock)
     cout << "聊天室服务器已开启" << endl;
     // 该线程负责处理服务端和各个客户端发生的事件
     // 将传入的参数初始化
-    string usrs[MAX_LINK_NUM] = {0};
+    string usrs[MAX_LINK_NUM];
     while (1) // 不停执行
     {
-        for (int i = 0; i < total + 1; ++i) // i代表现在正在监听事件的终端
+        for (int i = 0; i < total + 1; i++) // i代表现在正在监听事件的终端
         {
             // 若有一个客户端链接，total==1，循环两次，包含客户端和服务端
             // 对每一个终端（客户端和服务端），查看是否发生事件，等待WAIT_TIME毫秒
@@ -115,7 +112,7 @@ void ServFun(SOCKET servSock)
                                 {
                                     usrs[nextIndex] = string(usr_name_char);
                                     // 给新用户传送所有在聊天室的用户的用户名，方便初始化
-                                    string all_user_name = "";
+                                    string all_user_name;
                                     for (int i = 1; i <= total; ++i) // 包括自己
                                     {
                                         all_user_name.append(usrs[i].c_str()).append("+"); // 用户名使用+分割
@@ -134,7 +131,7 @@ void ServFun(SOCKET servSock)
                                             用户进入msg格式： (s->c)
                                             char(23) + user_name
                                         */
-                                        string msg = "";
+                                        string msg;
                                         msg.append(1, char(23)).append(usrs[nextIndex].c_str());
                                         for (int i = 1; i < total; ++i) // 不包括自己
                                         {
@@ -164,7 +161,7 @@ void ServFun(SOCKET servSock)
                     closesocket(cliSock[i]);
                     WSACloseEvent(cliEvent[i]);
                     // 数组调整,用顺序表删除元素
-                    for (int j = i; j < total; ++j)
+                    for (int j = i; j < total; j++)
                     {
                         cliSock[j] = cliSock[j + 1];
                         cliEvent[j] = cliEvent[j + 1];
@@ -184,10 +181,10 @@ void ServFun(SOCKET servSock)
                         用户退出msg格式： (s->c)
                         char(22) + user_name
                     */
-                    string msg = "";
+                    string msg;
                     msg.append(1, char(22)).append(exit_user_name.c_str());
-                    // cout << "msg: " << msg << endl;
-                    for (int j = 1; j <= total; ++j)
+                    cout << "msg: " << msg << endl;
+                    for (int j = 1; j <= total; j++)
                     {
                         send(cliSock[j], msg.c_str(), msg.size(), 0);
                     }
@@ -195,25 +192,25 @@ void ServFun(SOCKET servSock)
                 else if (networkEvents.lNetworkEvents & FD_READ) // 接收到消息
                 {
                     char buffer[BUFFER_SIZE]{}; // 字符缓冲区，用于接收和发送消息
-                    for (int j = 1; j <= total; ++j)
+                    for (int j = 1; j <= total; j++)
                     {
                         int nrecv = recv(cliSock[j], buffer, sizeof(buffer), 0); // nrecv是接收到的字节数
                         if (nrecv > 0)                                           // 如果接收到的字符数大于0
                         {
-                            if (buffer[0] == 20) // 开头为 ASCII = 20 的分隔符, 表示是私聊
+                            if (buffer[0] == 20)
                             {
                                 /*
                                 私密聊天msg格式: (c->s)
                                     char(20) + dest_name + char(20) + msg
                                 */
-                                string dest_name = "", msg = "";
+                                string dest_name, msg;
                                 int begin = 1;
                                 while (buffer[begin] != 20)
-                                    dest_name += buffer[begin++]; // 循环摘出私聊对象的用户名
+                                    dest_name += buffer[begin++];
                                 int dest_id = 0;
                                 for (int i = 1; i <= total; ++i)
                                 {
-                                    if (!usrs[i].compare(dest_name)) // 对比用户列表的用户名, 取出UID
+                                    if (!usrs[i].compare(dest_name))
                                     {
                                         dest_id = i;
                                         break;
@@ -227,7 +224,6 @@ void ServFun(SOCKET servSock)
                                     char(20) + source_name + char(20) + msg
                                 */
                                 msg.append(1, char(20)).append(source_name.c_str()).append(1, char(20)).append(buffer + begin + 1, strlen(buffer) - begin - 1);
-                                // cout << "msg: " << msg << endl;
                                 send(cliSock[dest_id], msg.c_str(), msg.size(), 0);
                             }
                             else if (buffer[0] = 21)
@@ -238,7 +234,7 @@ void ServFun(SOCKET servSock)
                                 */
 
                                 string source_name = usrs[i];
-                                string msg = "";
+                                string msg;
                                 /*
                                 群发聊天msg格式: (s->c)
                                     char(21) + source_name + char(21) + msg
@@ -247,9 +243,8 @@ void ServFun(SOCKET servSock)
                                 std::cout << "群发: " << source_name << " -> " << buffer + 1 << '\n';
 
                                 msg.append(1, char(21)).append(source_name.c_str()).append(1, char(21)).append(buffer + 1, strlen(buffer) - 1);
-                                // cout << "msg: " << msg << endl;
                                 // 在其他客户端显示（广播给其他客户端）
-                                for (int k = 1; k <= total; ++k)
+                                for (int k = 1; k <= total; k++)
                                 {
                                     send(cliSock[k], msg.c_str(), msg.size(), 0);
                                 }
