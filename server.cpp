@@ -58,7 +58,7 @@ int main()
     return 0;
 }
 
-void ServFun(SOCKET servSock)  
+void ServFun(SOCKET servSock)
 {
     cout << "聊天室服务器已开启" << endl;
     // 该线程负责处理服务端和各个客户端发生的事件
@@ -129,18 +129,18 @@ void ServFun(SOCKET servSock)
                                         WSAEventSelect(cliSock[nextIndex], newEvent, FD_CLOSE | FD_READ | FD_WRITE);
                                         cliEvent[nextIndex] = newEvent;
                                         /*
-                                            用户进入msg格式： (s->c) 
+                                            用户进入msg格式： (s->c)
                                             char(23) + user_name
                                         */
-                                        string msg; 
+                                        string msg;
                                         msg.append(1, char(23)).append(usrs[nextIndex].c_str());
                                         for (int i = 1; i < total; ++i) //不包括自己
                                         {
                                             send(cliSock[i], msg.c_str(), msg.size(), 0);
                                         }
                                         break;
-                                    } 
-                                    else 
+                                    }
+                                    else
                                     {
                                         total--;
                                         usrs[nextIndex].clear();
@@ -179,7 +179,7 @@ void ServFun(SOCKET servSock)
                     cout <<  "用户: " << exit_user_name.c_str() << " 退出了聊天室,当前连接数：" << total << endl;
                     // 给所有客户端发送退出聊天室的消息
                     /*
-                        用户退出msg格式： (s->c) 
+                        用户退出msg格式： (s->c)
                         char(22) + user_name
                     */
                     string msg;
@@ -207,9 +207,9 @@ void ServFun(SOCKET servSock)
                                 while(buffer[begin] != 20)
                                     dest_name += buffer[begin++];
                                 int dest_id = 0;
-                                for (int i = 1; i <= total; ++i) 
+                                for (int i = 1; i <= total; ++i)
                                 {
-                                    if(!usrs[i].compare(dest_name)) 
+                                    if(!usrs[i].compare(dest_name))
                                     {
                                         dest_id = i;
                                         break;
@@ -227,7 +227,7 @@ void ServFun(SOCKET servSock)
                                     1, char(20)).append(
                                     buffer + begin + 1, strlen(buffer) - begin - 1);
                                 send(cliSock[dest_id], msg.c_str(), msg.size(), 0);
-                            } else if (buffer[0] = 21){ 
+                            } else if (buffer[0] = 21){
                                 /*
                                 群发格式：(c->s)
                                     char(21) + msg
